@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_social_publish_account_user,social.publish.account user,model_social_publish_account,base.group_user,1,1,1,1
+access_social_publish_automation_task_user,social.publish.automation.task user,model_social_publish_automation_task,base.group_user,1,1,1,1
+access_social_publish_automation_task_log_user,social.publish.automation.task.log user,model_social_publish_automation_task_log,base.group_user,1,1,1,1
+access_social_publish_material_user,social.publish.material user,model_social_publish_material,base.group_user,1,1,1,1

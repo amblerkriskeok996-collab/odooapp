@@ -1,0 +1,281 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="social_auto_publish_launcher.LauncherApp">
+        <div class="sapl_root">
+            <Sidebar menuItems="menuItems" currentPage="state.currentPage" isCollapsed="state.isCollapsed" onSelect.bind="selectPage"/>
+            <section class="sapl_shell">
+                <HeaderBar title="getCurrentPageLabel()" onToggle.bind="toggleSidebar"/>
+                <main class="sapl_content">
+                    <DashboardPage t-if="state.currentPage === 'dashboard'" stats="getDashboardStats()" state="state" platformOptions="platformOptions" onRefresh.bind="refreshDashboardData" onNavigate.bind="selectPage"/>
+                    <AccountPage t-if="state.currentPage === 'accounts'" state="state" platformTabs="platformTabs" accounts="getFilteredAccounts()" abnormalAccounts="getCurrentTabAbnormalAccounts()" getAvatarText.bind="getAvatarText" getPlatformTone.bind="getPlatformTone" onSetTab.bind="setAccountTab" onRefresh.bind="refreshAccounts" onOpenAdd.bind="openAddAccount" onEdit.bind="editAccount" onDelete.bind="deleteAccount" onDeleteAbnormal.bind="deleteAbnormalAccounts" onToggleStatus.bind="toggleAccountStatus" onDownloadCookie.bind="downloadCookie" onUploadCookie.bind="uploadCookie"/>
+                    <MaterialPage t-if="state.currentPage === 'materials'" state="state" materials="getFilteredMaterials()" onRefresh.bind="refreshMaterials" onOpenUpload.bind="openMaterialUpload" onPreview.bind="previewMaterial" onDelete.bind="deleteMaterial"/>
+                    <PublishPage t-if="state.currentPage === 'publish'" state="state" activeTab="getActivePublishTab()" platformOptions="platformOptions" recommendedTopics="recommendedTopics" getSelectedAccount.bind="getSelectedAccount" getSelectedAccountName.bind="getSelectedAccountName" formatFileSize.bind="formatFileSize" includesPlatform.bind="includesPlatform" areAllPlatformsSelected.bind="areAllPlatformsSelected" onSetActiveTab.bind="setActivePublishTab" onAddTab.bind="addPublishTab" onDuplicateTab.bind="duplicatePublishTab" onRemoveTab.bind="removePublishTab" onSetPublishMode.bind="setPublishMode" onShowUploadOptions.bind="showPublishUploadOptions" onTogglePlatform.bind="togglePlatform" onToggleAllPlatforms.bind="toggleAllPlatforms" onOpenAccountSelector.bind="openAccountSelector" onRemoveSelectedAccount.bind="removeSelectedAccount" onOpenTopicSelector.bind="openTopicSelector" onRemoveTopic.bind="removeTopic" onPublish.bind="publishCurrentTab" onBatchPublish.bind="batchPublish" onRemovePublishFile.bind="removePublishFile" onAddDailyTime.bind="addDailyTime" onRemoveDailyTime.bind="removeDailyTime"/>
+                    <PlaceholderPage t-if="state.currentPage === 'website'" title="'网站'" description="'这里预留给原版前端的站点入口和站群管理页面，壳层、色彩和留白已与主应用对齐。'"/>
+                    <PlaceholderPage t-if="state.currentPage === 'data'" title="'数据'" description="'这里预留给原版前端的数据总览与反馈分析页面，当前先保持与原项目壳层一致。'"/>
+                </main>
+            </section>
+
+            <div class="sapl_modal_mask" t-if="state.modals.accountEditor">
+                <div class="sapl_modal sapl_modal_sm">
+                    <div class="sapl_modal_head">
+                        <h3><t t-esc="state.accountForm.id ? '编辑账号' : '添加账号'"/></h3>
+                        <button type="button" class="sapl_icon_btn" t-on-click="() => this.closeModal('accountEditor')">×</button>
+                    </div>
+                    <div class="sapl_modal_body sapl_form_stack">
+                        <label>
+                            <span>平台</span>
+                            <select class="sapl_input" t-model="state.accountForm.platform_key" t-att-disabled="state.accountForm.id or state.sseConnecting">
+                                <t t-foreach="platformOptions" t-as="platform" t-key="platform.key">
+                                    <option t-att-value="platform.key" t-esc="platform.label"/>
+                                </t>
+                            </select>
+                        </label>
+                        <label>
+                            <span>名称</span>
+                            <input class="sapl_input" type="text" t-model="state.accountForm.name" placeholder="请输入账号名称"/>
+                        </label>
+                        <label>
+                            <span>状态</span>
+                            <select class="sapl_input" t-model="state.accountForm.status">
+                                <option value="正常">正常</option>
+                                <option value="异常">异常</option>
+                            </select>
+                        </label>
+                        <div class="sapl_qrcode_panel" t-if="state.sseConnecting">
+                            <div class="sapl_muted" t-if="state.currentLoginTaskId">任务ID: <t t-esc="state.currentLoginTaskId"/></div>
+                            <div class="sapl_muted" t-if="state.currentLoginTask and state.currentLoginTask.status">自动化状态: <t t-esc="state.currentLoginTask.status"/></div>
+                            <div t-if="state.qrCodeData and !state.loginStatus" class="sapl_qrcode_ready">
+                                <p class="sapl_muted">请使用对应平台 APP 扫描二维码登录</p>
+                                <img t-att-src="state.qrCodeData" alt="登录二维码" class="sapl_qrcode_image"/>
+                            </div>
+                            <div t-elif="!state.qrCodeData and !state.loginStatus" class="sapl_qrcode_waiting">
+                                <span class="sapl_loading_dot"/>
+                                <span>请求中...</span>
+                            </div>
+                            <div t-if="state.loginStatus === '200'" class="sapl_login_success">登录成功，正在同步账号</div>
+                            <div t-elif="state.loginStatus === '500'" class="sapl_login_success">登录失败，请稍后重试</div>
+                            <div t-if="state.loginError" class="sapl_muted"><t t-esc="state.loginError"/></div>
+                        </div>
+                    </div>
+                    <div class="sapl_modal_foot">
+                        <button type="button" t-if="!state.accountForm.id" class="sapl_btn sapl_btn_primary" t-att-disabled="state.sseConnecting" t-on-click="saveAccount"><t t-esc="state.sseConnecting ? '请求中' : '获取二维码'"/></button>
+                        <button type="button" class="sapl_btn sapl_btn_ghost" t-on-click="() => this.closeModal('accountEditor')">取消</button>
+                        <button type="button" t-if="state.accountForm.id" class="sapl_btn sapl_btn_primary" t-on-click="saveAccount">保存修改</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sapl_modal_mask" t-if="state.modals.materialUpload">
+                <div class="sapl_modal sapl_modal_md">
+                    <div class="sapl_modal_head">
+                        <h3>上传素材</h3>
+                        <button type="button" class="sapl_icon_btn" t-on-click="() => this.closeModal('materialUpload')">×</button>
+                    </div>
+                    <div class="sapl_modal_body sapl_form_stack">
+                        <label>
+                            <span>文件名称</span>
+                            <input class="sapl_input" type="text" t-model="state.customFilename" t-att-disabled="state.materialFiles.length &gt; 1" placeholder="仅单文件上传时可自定义名称"/>
+                        </label>
+                        <label class="sapl_upload_dropzone">
+                            <span class="sapl_upload_title">将文件拖到此处，或点击上传</span>
+                            <span class="sapl_muted">支持视频、图片等格式文件，可一次选择多个文件</span>
+                            <input type="file" multiple="multiple" t-on-change="handleMaterialFiles"/>
+                        </label>
+                        <div class="sapl_upload_progress_list" t-if="state.materialFiles.length">
+                            <div class="sapl_upload_progress_item" t-foreach="state.materialFiles" t-as="file" t-key="file.name + file.size">
+                                <div class="sapl_upload_progress_top">
+                                    <span class="sapl_file_name" t-esc="file.name"/>
+                                    <span class="sapl_muted" t-esc="getMaterialUploadSpeed(file.name)"/>
+                                </div>
+                                <div class="sapl_progress_track"><div class="sapl_progress_fill" t-att-style="'width:' + getMaterialUploadPercentage(file.name) + '%'"/></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sapl_modal_foot">
+                        <button type="button" class="sapl_btn sapl_btn_ghost" t-on-click="() => this.closeModal('materialUpload')">取消</button>
+                        <button type="button" class="sapl_btn sapl_btn_primary" t-att-disabled="state.isUploadingMaterials" t-on-click="submitMaterialUpload"><t t-esc="state.isUploadingMaterials ? '上传中' : '确认上传'"/></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sapl_modal_mask" t-if="state.modals.materialPreview and state.previewMaterial">
+                <div class="sapl_modal sapl_modal_lg">
+                    <div class="sapl_modal_head">
+                        <h3>素材预览</h3>
+                        <button type="button" class="sapl_icon_btn" t-on-click="() => this.closeModal('materialPreview')">×</button>
+                    </div>
+                    <div class="sapl_modal_body sapl_preview_layout">
+                        <div class="sapl_preview_media">
+                            <img t-if="isImageMaterial(state.previewMaterial)" t-att-src="getMaterialPreviewUrl(state.previewMaterial)" alt="preview" class="sapl_preview_image"/>
+                            <video t-else="" class="sapl_preview_video" controls="controls" t-att-src="getMaterialPreviewUrl(state.previewMaterial)"/>
+                        </div>
+                        <div class="sapl_preview_meta">
+                            <p><strong>UUID:</strong> <t t-esc="state.previewMaterial.uuid"/></p>
+                            <p><strong>文件名:</strong> <t t-esc="state.previewMaterial.filename"/></p>
+                            <p><strong>文件大小:</strong> <t t-esc="state.previewMaterial.filesize"/> MB</p>
+                            <p><strong>上传时间:</strong> <t t-esc="state.previewMaterial.upload_time"/></p>
+                            <button type="button" class="sapl_btn sapl_btn_primary" t-on-click="() => this.downloadMaterial(state.previewMaterial)">下载文件</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="sapl_modal_mask" t-if="state.modals.publishUploadOptions">
+                <div class="sapl_modal sapl_modal_sm">
+                    <div class="sapl_modal_head"><h3>选择上传方式</h3><button type="button" class="sapl_icon_btn" t-on-click="() => this.closeModal('publishUploadOptions')">×</button></div>
+                    <div class="sapl_modal_body sapl_option_grid"><button type="button" class="sapl_btn sapl_btn_primary sapl_btn_block" t-on-click="openPublishLocalUpload">本地上传</button><button type="button" class="sapl_btn sapl_btn_success sapl_btn_block" t-on-click="openPublishMaterialLibrary">素材库</button></div>
+                </div>
+            </div>
+
+            <div class="sapl_modal_mask" t-if="state.modals.publishLocalUpload">
+                <div class="sapl_modal sapl_modal_md">
+                    <div class="sapl_modal_head"><h3>本地上传</h3><button type="button" class="sapl_icon_btn" t-on-click="() => this.closeModal('publishLocalUpload')">×</button></div>
+                    <div class="sapl_modal_body"><label class="sapl_upload_dropzone"><span class="sapl_upload_title">选择要发布的文件</span><span class="sapl_muted"><t t-esc="getActivePublishTab().publishMode === 'image' ? '当前为图片模式' : '当前为视频模式'"/></span><input type="file" multiple="multiple" t-att-accept="getActivePublishTab().publishMode === 'image' ? 'image/*' : 'video/*'" t-on-change="handlePublishFiles"/></label></div>
+                </div>
+            </div>
+
+            <div class="sapl_modal_mask" t-if="state.modals.publishMaterialLibrary">
+                <div class="sapl_modal sapl_modal_lg">
+                    <div class="sapl_modal_head"><h3>选择素材</h3><button type="button" class="sapl_icon_btn" t-on-click="() => this.closeModal('publishMaterialLibrary')">×</button></div>
+                    <div class="sapl_modal_body sapl_selection_rows">
+                        <label class="sapl_selection_row" t-foreach="state.materials" t-as="material" t-key="material.id">
+                            <input type="checkbox" t-att-checked="state.tempSelectedMaterials.includes(material.id)" t-on-change="() => this.toggleMaterialSelection(material.id)"/>
+                            <div><strong t-esc="material.filename"/><span class="sapl_muted"><t t-esc="material.uuid"/> · <t t-esc="material.filesize"/> MB · <t t-esc="material.upload_time"/></span></div>
+                        </label>
+                    </div>
+                    <div class="sapl_modal_foot"><button type="button" class="sapl_btn sapl_btn_ghost" t-on-click="() => this.closeModal('publishMaterialLibrary')">取消</button><button type="button" class="sapl_btn sapl_btn_primary" t-on-click="confirmMaterialSelection">确定</button></div>
+                </div>
+            </div>
+
+            <div class="sapl_modal_mask" t-if="state.modals.publishAccountSelector">
+                <div class="sapl_modal sapl_modal_md">
+                    <div class="sapl_modal_head"><h3>选择账号</h3><button type="button" class="sapl_icon_btn" t-on-click="() => this.closeModal('publishAccountSelector')">×</button></div>
+                    <div class="sapl_modal_body sapl_selection_rows">
+                        <label class="sapl_selection_row" t-foreach="getSelectableAccounts()" t-as="account" t-key="account.id">
+                            <input type="checkbox" t-att-checked="state.tempSelectedAccounts.includes(account.id)" t-on-change="() => this.toggleTempAccount(account.id)"/>
+                            <div><strong t-esc="account.name"/><span class="sapl_muted"><t t-esc="account.platform"/> · <t t-esc="account.status"/></span></div>
+                        </label>
+                    </div>
+                    <div class="sapl_modal_foot"><button type="button" class="sapl_btn sapl_btn_ghost" t-on-click="() => this.closeModal('publishAccountSelector')">取消</button><button type="button" class="sapl_btn sapl_btn_primary" t-on-click="confirmAccountSelection">确定</button></div>
+                </div>
+            </div>
+
+            <div class="sapl_modal_mask" t-if="state.modals.publishTopicSelector">
+                <div class="sapl_modal sapl_modal_md">
+                    <div class="sapl_modal_head"><h3>添加话题</h3><button type="button" class="sapl_icon_btn" t-on-click="() => this.closeModal('publishTopicSelector')">×</button></div>
+                    <div class="sapl_modal_body sapl_form_stack">
+                        <div class="sapl_topic_input_row"><div class="sapl_topic_prefix">#</div><input class="sapl_input" type="text" placeholder="输入自定义话题" t-model="state.topicInput"/><button type="button" class="sapl_btn sapl_btn_primary" t-on-click="() => this.addTopic()">添加</button></div>
+                        <div class="sapl_topic_recommend"><h4>推荐话题</h4><div class="sapl_topic_grid"><button type="button" class="sapl_topic_chip" t-foreach="recommendedTopics" t-as="topic" t-key="topic" t-on-click="() => this.addTopic(topic)"><t t-esc="topic"/></button></div></div>
+                    </div>
+                    <div class="sapl_modal_foot"><button type="button" class="sapl_btn sapl_btn_primary" t-on-click="() => this.closeModal('publishTopicSelector')">完成</button></div>
+                </div>
+            </div>
+
+            <div class="sapl_modal_mask" t-if="state.modals.publishBatchProgress">
+                <div class="sapl_modal sapl_modal_md">
+                    <div class="sapl_modal_head"><h3>批量发布进度</h3><button type="button" t-if="!state.batchPublishing" class="sapl_icon_btn" t-on-click="() => this.closeModal('publishBatchProgress')">×</button></div>
+                    <div class="sapl_modal_body sapl_form_stack">
+                        <div class="sapl_progress_track"><div class="sapl_progress_fill sapl_progress_fill_gradient" t-att-style="'width:' + state.batchProgress + '%'"/></div>
+                        <div class="sapl_muted">当前任务：<t t-esc="state.currentPublishingLabel || '等待中'"/></div>
+                        <div class="sapl_result_list" t-if="state.batchResults.length"><div t-foreach="state.batchResults" t-as="result" t-key="result.label" t-att-class="result.status === 'success' ? 'sapl_result_item is-success' : 'sapl_result_item is-error'"><strong t-esc="result.label"/><span t-esc="result.message"/></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="social_auto_publish_launcher.Sidebar">
+        <aside t-att-class="props.isCollapsed ? 'sapl_sidebar is-collapsed' : 'sapl_sidebar'">
+            <div class="sapl_logo"><span t-if="props.isCollapsed">SA</span><span t-else="">自媒体自动化运营系统</span></div>
+            <nav class="sapl_nav">
+                <button type="button" t-foreach="props.menuItems" t-as="item" t-key="item.key" t-att-class="props.currentPage === item.key ? 'sapl_nav_item is-active' : 'sapl_nav_item'" t-on-click="() => props.onSelect(item.key)">
+                    <span class="sapl_nav_icon" t-esc="item.icon"/>
+                    <span t-if="!props.isCollapsed" t-esc="item.label"/>
+                </button>
+            </nav>
+        </aside>
+    </t>
+
+    <t t-name="social_auto_publish_launcher.HeaderBar">
+        <header class="sapl_header"><button type="button" class="sapl_header_toggle" t-on-click="props.onToggle">☰</button><div class="sapl_header_title" t-esc="props.title"/></header>
+    </t>
+
+    <t t-name="social_auto_publish_launcher.DashboardPage">
+        <div class="sapl_page">
+            <div class="sapl_page_head"><h1>自媒体自动化运营系统</h1><button type="button" class="sapl_btn sapl_btn_primary sapl_btn_plain" t-att-disabled="props.state.dashboardRefreshing" t-on-click="props.onRefresh"><t t-esc="props.state.dashboardRefreshing ? '刷新中' : '刷新真实数据'"/></button></div>
+            <div class="sapl_stat_grid">
+                <article class="sapl_stat_card"><div class="sapl_stat_main"><div class="sapl_stat_icon">◉</div><div><div class="sapl_stat_value" t-esc="props.stats.accountTotal"/><div class="sapl_stat_label">账号总数</div></div></div><div class="sapl_stat_footer"><span>正常: <t t-esc="props.stats.normalAccounts"/></span><span>异常: <t t-esc="props.stats.abnormalAccounts"/></span></div></article>
+                <article class="sapl_stat_card"><div class="sapl_stat_main"><div class="sapl_stat_icon tone-success">◎</div><div><div class="sapl_stat_value" t-esc="props.stats.platformTotal"/><div class="sapl_stat_label">平台总数</div></div></div><div class="sapl_stat_footer sapl_tag_row"><span t-foreach="props.platformOptions.slice(0, 4)" t-as="platform" t-key="platform.key" t-att-class="'sapl_tag is-' + platform.tone"><t t-esc="props.stats.platformCounters[platform.key]"/></span></div></article>
+                <article class="sapl_stat_card"><div class="sapl_stat_main"><div class="sapl_stat_icon tone-warning">≣</div><div><div class="sapl_stat_value" t-esc="props.stats.taskTotal"/><div class="sapl_stat_label">任务总数</div></div></div><div class="sapl_stat_footer"><span>暂无真实任务数据</span></div></article>
+                <article class="sapl_stat_card"><div class="sapl_stat_main"><div class="sapl_stat_icon tone-info">▣</div><div><div class="sapl_stat_value" t-esc="props.stats.materialTotal"/><div class="sapl_stat_label">素材总数</div></div></div><div class="sapl_stat_footer"><span>来自素材管理真实数据</span></div></article>
+            </div>
+            <section class="sapl_block"><h2>快捷操作</h2><div class="sapl_quick_grid"><button type="button" class="sapl_quick_card" t-on-click="() => props.onNavigate('accounts')"><div class="sapl_quick_icon">◉</div><strong>账号管理</strong><span>管理所有平台账号</span></button><button type="button" class="sapl_quick_card" t-on-click="() => props.onNavigate('materials')"><div class="sapl_quick_icon">▣</div><strong>素材管理</strong><span>上传和管理素材</span></button><button type="button" class="sapl_quick_card" t-on-click="() => props.onNavigate('publish')"><div class="sapl_quick_icon">⇪</div><strong>发布中心</strong><span>选择账号并发布内容</span></button></div></section>
+            <section class="sapl_block"><div class="sapl_section_title"><h2>最近任务</h2></div><div class="sapl_empty_state">暂无真实任务数据</div></section>
+        </div>
+    </t>
+
+    <t t-name="social_auto_publish_launcher.AccountPage">
+        <div class="sapl_page">
+            <h1 class="sapl_page_title">账号管理</h1>
+            <section class="sapl_surface">
+                <div class="sapl_tabs"><button type="button" t-foreach="props.platformTabs" t-as="tab" t-key="tab.name" t-att-class="props.state.accountTab === tab.name ? 'sapl_tab is-active' : 'sapl_tab'" t-on-click="() => props.onSetTab(tab.name)" t-esc="tab.label"/></div>
+                <div class="sapl_toolbar"><input class="sapl_input sapl_search" type="text" placeholder="输入名称或账号搜索" t-model="props.state.accountSearch"/><div class="sapl_toolbar_actions"><button type="button" class="sapl_btn sapl_btn_primary" t-on-click="props.onOpenAdd">添加账号</button><button type="button" class="sapl_btn sapl_btn_light" t-on-click="props.onRefresh">刷新账号</button><button type="button" class="sapl_btn sapl_btn_danger" t-att-disabled="!props.abnormalAccounts.length" t-on-click="props.onDeleteAbnormal">一键删除异常</button></div></div>
+                <div class="sapl_table_wrap" t-if="props.accounts.length"><table class="sapl_table"><thead><tr><th>头像</th><th>名称</th><th>平台</th><th>状态</th><th>操作</th></tr></thead><tbody><tr t-foreach="props.accounts" t-as="account" t-key="account.id"><td><div class="sapl_avatar" t-esc="props.getAvatarText(account.name)"/></td><td t-esc="account.name"/><td><span t-att-class="'sapl_tag is-' + props.getPlatformTone(account.platform)" t-esc="account.platform"/></td><td><button type="button" t-att-class="account.status === '正常' ? 'sapl_status_tag is-normal' : 'sapl_status_tag is-abnormal'" t-on-click="() => props.onToggleStatus(account)" t-esc="account.status"/></td><td><div class="sapl_row_actions"><button type="button" class="sapl_link_btn" t-on-click="() => props.onEdit(account)">编辑</button><button type="button" class="sapl_link_btn" t-on-click="() => props.onDownloadCookie(account)">下载Cookie</button><button type="button" class="sapl_link_btn" t-on-click="() => props.onUploadCookie(account)">上传Cookie</button><button type="button" class="sapl_link_btn is-danger" t-on-click="() => props.onDelete(account.id)">删除</button></div></td></tr></tbody></table></div>
+                <div class="sapl_empty_state" t-else="">暂无账号数据</div>
+            </section>
+        </div>
+    </t>
+    <t t-name="social_auto_publish_launcher.MaterialPage">
+        <div class="sapl_page">
+            <h1 class="sapl_page_title">素材管理</h1>
+            <section class="sapl_surface">
+                <div class="sapl_toolbar"><input class="sapl_input sapl_search" type="text" placeholder="输入文件名或 UUID 搜索" t-model="props.state.materialSearch"/><div class="sapl_toolbar_actions"><button type="button" class="sapl_btn sapl_btn_primary" t-on-click="props.onOpenUpload">上传素材</button><button type="button" class="sapl_btn sapl_btn_light" t-on-click="props.onRefresh"><t t-esc="props.state.isRefreshingMaterials ? '刷新中' : '刷新列表'"/></button></div></div>
+                <div class="sapl_table_wrap" t-if="props.materials.length"><table class="sapl_table"><thead><tr><th>UUID</th><th>文件名</th><th>文件大小</th><th>上传时间</th><th>操作</th></tr></thead><tbody><tr t-foreach="props.materials" t-as="material" t-key="material.id"><td class="sapl_uuid" t-esc="material.uuid"/><td t-esc="material.filename"/><td><t t-esc="material.filesize"/> MB</td><td t-esc="material.upload_time"/><td><div class="sapl_row_actions"><button type="button" class="sapl_link_btn" t-on-click="() => props.onPreview(material)">预览</button><button type="button" class="sapl_link_btn is-danger" t-on-click="() => props.onDelete(material.id)">删除</button></div></td></tr></tbody></table></div>
+                <div class="sapl_empty_state" t-else="">暂无素材数据</div>
+            </section>
+        </div>
+    </t>
+
+    <t t-name="social_auto_publish_launcher.PublishPage">
+        <div class="sapl_page">
+            <div class="sapl_publish_head"><div class="sapl_publish_tabs"><div t-foreach="props.state.publishTabs" t-as="tab" t-key="tab.key" t-att-class="props.state.activePublishTabKey === tab.key ? 'sapl_publish_tab is-active' : 'sapl_publish_tab'"><button type="button" class="sapl_publish_tab_title" t-on-click="() => props.onSetActiveTab(tab.key)" t-esc="tab.label"/><button type="button" class="sapl_publish_tab_icon" t-on-click="() => props.onDuplicateTab(tab.key)">⧉</button><button type="button" t-if="props.state.publishTabs.length &gt; 1" class="sapl_publish_tab_icon" t-on-click="() => props.onRemoveTab(tab.key)">×</button></div></div><div class="sapl_toolbar_actions"><button type="button" class="sapl_btn sapl_btn_primary" t-on-click="props.onAddTab">新增 Tab</button><button type="button" class="sapl_btn sapl_btn_success" t-on-click="props.onBatchPublish">批量发布</button></div></div>
+            <section class="sapl_surface sapl_publish_surface">
+                <div t-if="props.activeTab.publishStatus" t-att-class="props.activeTab.publishStatus.type === 'success' ? 'sapl_notice is-success' : 'sapl_notice is-error'"><t t-esc="props.activeTab.publishStatus.message"/></div>
+                <div class="sapl_form_section"><h3>发布类型</h3><div class="sapl_radio_group"><button type="button" t-att-class="props.activeTab.publishMode === 'video' ? 'sapl_radio_btn is-active' : 'sapl_radio_btn'" t-on-click="() => props.onSetPublishMode('video')">发布视频</button><button type="button" t-att-class="props.activeTab.publishMode === 'image' ? 'sapl_radio_btn is-active' : 'sapl_radio_btn'" t-on-click="() => props.onSetPublishMode('image')">发布图片</button></div></div>
+                <div class="sapl_form_section"><h3><t t-esc="props.activeTab.publishMode === 'image' ? '图片' : '视频'"/></h3><button type="button" class="sapl_btn sapl_btn_primary" t-on-click="props.onShowUploadOptions">上传<t t-esc="props.activeTab.publishMode === 'image' ? '图片' : '视频'"/></button><div class="sapl_file_cards" t-if="props.activeTab.files.length"><div class="sapl_file_card" t-foreach="props.activeTab.files" t-as="file" t-key="file.path"><div><strong t-esc="file.name"/><span class="sapl_muted" t-esc="props.formatFileSize(file.size)"/></div><button type="button" class="sapl_link_btn is-danger" t-on-click="() => props.onRemovePublishFile(file.path)">删除</button></div></div></div>
+                <div class="sapl_form_section">
+                    <div class="sapl_section_title sapl_section_title_platforms">
+                        <div>
+                            <h3>平台选择</h3>
+                            <p class="sapl_section_hint">已选 <t t-esc="props.activeTab.selectedPlatforms.length"/> / <t t-esc="props.platformOptions.length"/> 个平台</p>
+                        </div>
+                        <button type="button" class="sapl_btn sapl_btn_light" t-on-click="props.onToggleAllPlatforms"><t t-esc="props.areAllPlatformsSelected() ? '取消全选' : '全选所有平台'"/></button>
+                    </div>
+                    <div class="sapl_platform_grid">
+                        <label t-foreach="props.platformOptions" t-as="platform" t-key="platform.key" t-att-class="props.activeTab.selectedPlatforms.includes(platform.key) ? 'sapl_platform_card is-selected' : 'sapl_platform_card'">
+                            <input class="sapl_platform_checkbox" type="checkbox" t-att-checked="props.activeTab.selectedPlatforms.includes(platform.key)" t-on-change="() => props.onTogglePlatform(platform.key)"/>
+                            <div class="sapl_platform_card_top">
+                                <span t-att-class="'sapl_tag is-' + platform.tone" t-esc="platform.label"/>
+                                <span class="sapl_platform_check" t-if="props.activeTab.selectedPlatforms.includes(platform.key)">已选</span>
+                            </div>
+                            <strong class="sapl_platform_name" t-esc="platform.label"/>
+                            <span class="sapl_platform_meta">点击后将内容加入该平台发布队列</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="sapl_form_section"><h3>账号</h3><div class="sapl_picker_line"><div class="sapl_token_list"><t t-if="props.activeTab.selectedAccounts.length"><span class="sapl_token" t-foreach="props.activeTab.selectedAccounts" t-as="accountId" t-key="accountId"><t t-esc="props.getSelectedAccountName(accountId)"/><button type="button" t-on-click="() => props.onRemoveSelectedAccount(accountId)">×</button></span></t><span t-else="" class="sapl_muted">未选择账号</span></div><button type="button" class="sapl_btn sapl_btn_light" t-on-click="props.onOpenAccountSelector">选择账号</button></div></div>
+                <div class="sapl_form_section" t-if="props.includesPlatform('tencent')"><label class="sapl_switch_row"><input type="checkbox" t-model="props.activeTab.isDraft"/><span>视频号仅保存草稿（用手机发布）</span></label></div>
+                <div class="sapl_form_section" t-if="props.includesPlatform('douyin')"><h3>商品链接</h3><input class="sapl_input" type="text" placeholder="请输入商品名称" t-model="props.activeTab.productTitle"/><input class="sapl_input" type="text" placeholder="请输入商品链接" t-model="props.activeTab.productLink"/></div>
+                <div class="sapl_form_section"><h3>标题</h3><textarea class="sapl_textarea" rows="4" placeholder="请输入标题" t-model="props.activeTab.title"/></div>
+                <div class="sapl_form_section"><h3>话题</h3><div class="sapl_picker_line sapl_picker_line_stack"><div class="sapl_token_list"><t t-if="props.activeTab.selectedTopics.length"><span class="sapl_token" t-foreach="props.activeTab.selectedTopics" t-as="topic" t-key="topic">#<t t-esc="topic"/><button type="button" t-on-click="() => props.onRemoveTopic(topic)">×</button></span></t><span t-else="" class="sapl_muted">还没有添加话题</span></div><button type="button" class="sapl_btn sapl_btn_light" t-on-click="props.onOpenTopicSelector">添加话题</button></div></div>
+                <div class="sapl_form_section"><h3>定时发布</h3><label class="sapl_switch_row"><input type="checkbox" t-model="props.activeTab.scheduleEnabled"/><span t-esc="props.activeTab.scheduleEnabled ? '定时发布' : '立即发布'"/></label><div class="sapl_schedule_box" t-if="props.activeTab.scheduleEnabled"><div class="sapl_schedule_row"><span class="sapl_schedule_label">每天发布视频数：</span><select class="sapl_input sapl_input_small" t-model="props.activeTab.videosPerDay"><option t-foreach="[1,2,3,4,5,6,7,8,9,10]" t-as="num" t-key="num" t-att-value="num" t-esc="num"/></select></div><div class="sapl_schedule_row"><span class="sapl_schedule_label">从第几天开始：</span><input class="sapl_input sapl_input_small" type="number" min="0" max="30" t-model="props.activeTab.startDays"/></div><div class="sapl_schedule_times"><div class="sapl_schedule_time_row" t-foreach="props.activeTab.dailyTimes" t-as="dailyTime" t-key="dailyTime + '_' + dailyTime_index"><input class="sapl_input sapl_input_small" type="time" t-model="props.activeTab.dailyTimes[dailyTime_index]"/><button type="button" class="sapl_link_btn" t-on-click="props.onAddDailyTime">新增时间</button><button type="button" class="sapl_link_btn is-danger" t-on-click="() => props.onRemoveDailyTime(dailyTime_index)">删除</button></div></div></div></div>
+                <div class="sapl_actions_end"><button type="button" class="sapl_btn sapl_btn_primary" t-att-disabled="props.activeTab.publishing" t-on-click="props.onPublish"><t t-esc="props.activeTab.publishing ? '发布中' : '立即发布'"/></button></div>
+            </section>
+        </div>
+    </t>
+
+    <t t-name="social_auto_publish_launcher.PlaceholderPage">
+        <div class="sapl_page"><section class="sapl_surface sapl_placeholder"><h1 t-esc="props.title"/><p t-esc="props.description"/></section></div>
+    </t>
+</templates>
+
+

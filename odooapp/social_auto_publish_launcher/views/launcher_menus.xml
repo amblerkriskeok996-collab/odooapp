@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_social_auto_publish_root" name="自媒体自动化运营系统" groups="base.group_user" sequence="280" web_icon="social_auto_publish_launcher,static/description/icon.png">
+        <menuitem id="menu_social_auto_publish_center" name="发布中心" action="action_social_auto_publish_launcher_client" groups="base.group_user" sequence="10"/>
+    </menuitem>
+</odoo>
