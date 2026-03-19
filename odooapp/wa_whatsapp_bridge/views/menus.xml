@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_wa_whatsapp_root" name="WhatsApp Bridge" sequence="90"/>
+    <menuitem id="menu_wa_whatsapp_portal" name="WhatsApp Portal" parent="menu_wa_whatsapp_root" action="action_wa_embedded_portal" sequence="5"/>
+    <menuitem id="menu_wa_whatsapp_chats" name="WhatsApp Chats" parent="menu_wa_whatsapp_root" action="action_wa_chat_workspace" sequence="10"/>
+</odoo>

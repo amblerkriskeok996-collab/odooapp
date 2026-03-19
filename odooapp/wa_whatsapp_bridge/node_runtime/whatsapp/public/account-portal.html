@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WhatsApp 账号管理</title>
+    <style>
+        :root {
+            --bg: #f2efe9;
+            --panel: #fffdf8;
+            --ink: #1f2a2e;
+            --muted: #5d6769;
+            --line: #d8d2c7;
+            --brand: #1d8762;
+            --warn: #b25f31;
+            --danger: #b64242;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            font-family: "Segoe UI Variable", "Trebuchet MS", "Noto Sans SC", sans-serif;
+            background:
+                radial-gradient(circle at 20% 15%, #dcece5 0, transparent 42%),
+                radial-gradient(circle at 85% 0%, #f2d9c4 0, transparent 40%),
+                var(--bg);
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        .panel {
+            width: min(760px, 96vw);
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            box-shadow: 0 20px 48px rgba(40, 34, 24, 0.16);
+            overflow: hidden;
+            animation: rise-in 360ms ease-out both;
+        }
+
+        @keyframes rise-in {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header {
+            padding: 28px 28px 12px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 30px;
+            letter-spacing: 0.02em;
+        }
+
+        .subtitle {
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 15px;
+        }
+
+        .status-grid {
+            margin: 10px 28px 0;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 14px;
+            background: #fff;
+            display: grid;
+            gap: 10px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            font-size: 15px;
+            align-items: center;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .badge-ready {
+            background: #def4eb;
+            color: #14684a;
+            border-color: #b2dbc9;
+        }
+
+        .badge-alert {
+            background: #fbe8de;
+            color: #8a3f18;
+            border-color: #edc4ac;
+        }
+
+        .badge-busy {
+            background: #e9ecf8;
+            color: #2f3f89;
+            border-color: #ccd4ef;
+        }
+
+        .actions {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            padding: 20px 28px 28px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+        }
+
+        button:hover:enabled {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, #218861, #1d7057);
+        }
+
+        .btn-switch {
+            background: linear-gradient(135deg, #b25831, #924423);
+        }
+
+        .hint {
+            padding: 0 28px 26px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .toast {
+            margin: 0 28px 20px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #f0cdcd;
+            background: #fff2f2;
+            color: var(--danger);
+            display: none;
+        }
+
+        .toast.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <main class="panel">
+        <header>
+            <h1>WhatsApp 账号管理</h1>
+            <p class="subtitle">登录会进入已登录账号首页。若账号失效会提示重新登录。</p>
+        </header>
+
+        <section class="status-grid">
+            <div class="row">
+                <span>账号状态</span>
+                <span id="statusBadge" class="badge badge-busy">LOADING</span>
+            </div>
+            <div class="row">
+                <span>账号标识</span>
+                <strong id="accountWid">-</strong>
+            </div>
+            <div class="row">
+                <span>服务器状态</span>
+                <strong id="waState">-</strong>
+            </div>
+            <div class="row">
+                <span>状态说明</span>
+                <strong id="statusDetail">初始化中</strong>
+            </div>
+        </section>
+
+        <div id="toast" class="toast"></div>
+
+        <section class="actions">
+            <button id="loginButton" class="btn-login" type="button">登录</button>
+            <button id="switchButton" class="btn-switch" type="button">更换账号</button>
+        </section>
+
+        <div class="hint">
+            更换账号会清除 `.wwebjs_auth` 与 `.wwebjs_cache`，并重新拉起登录流程。
+        </div>
+    </main>
+
+    <script>
+        const statusBadge = document.getElementById('statusBadge');
+        const accountWid = document.getElementById('accountWid');
+        const waState = document.getElementById('waState');
+        const statusDetail = document.getElementById('statusDetail');
+        const toast = document.getElementById('toast');
+        const loginButton = document.getElementById('loginButton');
+        const switchButton = document.getElementById('switchButton');
+
+        let latestStatus = null;
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+        }
+
+        function clearToast() {
+            toast.classList.remove('show');
+            toast.textContent = '';
+        }
+
+        function mapBadgeClass(state) {
+            if (state === 'ready') return 'badge badge-ready';
+            if (state === 'switching_account' || state === 'reinitializing' || state === 'initializing') return 'badge badge-busy';
+            return 'badge badge-alert';
+        }
+
+        function mapStateLabel(state) {
+            const labels = {
+                ready: 'READY',
+                authenticated: 'AUTH',
+                qr_required: 'RELOGIN',
+                auth_failure: 'EXPIRED',
+                disconnected: 'OFFLINE',
+                switching_account: 'SWITCHING',
+                reinitializing: 'REINIT',
+                initializing: 'BOOTING'
+            };
+            return labels[state] || (state || 'UNKNOWN').toUpperCase();
+        }
+
+        function renderStatus(data) {
+            latestStatus = data;
+            const state = data?.portalState || 'unknown';
+            statusBadge.className = mapBadgeClass(state);
+            statusBadge.textContent = mapStateLabel(state);
+            accountWid.textContent = data?.account?.wid || '-';
+            waState.textContent = data?.waState || '-';
+            statusDetail.textContent = data?.detail || '-';
+            switchButton.disabled = Boolean(data?.accountSwitchInProgress);
+            loginButton.disabled = Boolean(data?.accountSwitchInProgress);
+        }
+
+        async function refreshStatus() {
+            try {
+                const response = await fetch('/api/account/status');
+                const payload = await response.json();
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.error || '加载状态失败');
+                }
+                clearToast();
+                renderStatus(payload.data);
+            } catch (error) {
+                showToast(error.message || '加载状态失败');
+            }
+        }
+
+        async function login() {
+            try {
+                const response = await fetch('/api/account/login', { method: 'POST' });
+                const payload = await response.json();
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.error || '账号已失效，请重新登录');
+                }
+                window.location.href = payload.redirectPath || '/account-home';
+            } catch (error) {
+                showToast(error.message || '账号已失效，请重新登录');
+            } finally {
+                await refreshStatus();
+            }
+        }
+
+        async function switchAccount() {
+            clearToast();
+            try {
+                const response = await fetch('/api/account/switch-account', { method: 'POST' });
+                const payload = await response.json();
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.error || '清理登录信息失败');
+                }
+                showToast('已清理登录信息，请重新扫码登录。');
+                renderStatus(payload.data);
+            } catch (error) {
+                showToast(error.message || '清理登录信息失败');
+            } finally {
+                await refreshStatus();
+            }
+        }
+
+        loginButton.addEventListener('click', login);
+        switchButton.addEventListener('click', switchAccount);
+        refreshStatus();
+        setInterval(refreshStatus, 4000);
+    </script>
+</body>
+</html>

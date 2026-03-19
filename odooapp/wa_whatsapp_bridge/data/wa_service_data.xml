@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="wa_service_instance_default" model="wa.service.instance">
+        <field name="name">Default WhatsApp Service</field>
+        <field name="port">3000</field>
+        <field name="api_base_url">http://10.168.2.103:3000</field>
+        <field name="n8n_webhook_url">http://127.0.0.1:3000/webhook/whatsapp-workflow</field>
+    </record>
+</odoo>

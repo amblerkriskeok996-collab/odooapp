@@ -1,0 +1,241 @@
+.o_wa_chat_root {
+    height: calc(100vh - 2rem);
+    min-height: 44rem;
+    overflow-y: auto;
+}
+
+.o_wa_chat_shell {
+    height: 100%;
+    display: grid;
+    grid-template-columns: 24rem minmax(0, 1fr);
+    background:
+        linear-gradient(180deg, #efeae2 0%, #efeae2 70%, #e6dfd6 100%);
+    border: 1px solid #d7d1c8;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.o_wa_chat_sidebar {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #d9dfe3;
+    background: #f7f5f3;
+    min-width: 0;
+}
+
+.o_wa_chat_sidebar_header {
+    padding: 1.25rem 1.25rem 1rem;
+    border-bottom: 1px solid #e1e6e9;
+    background: #f0f2f5;
+}
+
+.o_wa_chat_title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #111b21;
+}
+
+.o_wa_chat_caption {
+    margin: 0.25rem 0 0;
+    color: #667781;
+    font-size: 0.875rem;
+}
+
+.o_wa_chat_list {
+    overflow-y: auto;
+    padding: 0.25rem 0;
+}
+
+.o_wa_chat_list_item {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    padding: 0.875rem 1.25rem;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    border-bottom: 1px solid #eef1f3;
+}
+
+.o_wa_chat_list_item:hover,
+.o_wa_chat_list_item.is-active {
+    background: #ebf5f3;
+}
+
+.o_wa_chat_avatar {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: 0 0 2.75rem;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #d9fdd3;
+    color: #0b5c4b;
+    font-weight: 700;
+}
+
+.o_wa_chat_avatar.is-large {
+    width: 3rem;
+    height: 3rem;
+    flex-basis: 3rem;
+}
+
+.o_wa_chat_summary {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.o_wa_chat_summary_top,
+.o_wa_chat_summary_bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.o_wa_chat_name,
+.o_wa_chat_preview {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.o_wa_chat_name {
+    color: #111b21;
+    font-weight: 600;
+}
+
+.o_wa_chat_time,
+.o_wa_chat_preview {
+    color: #667781;
+    font-size: 0.875rem;
+}
+
+.o_wa_chat_stage {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.o_wa_chat_stage_header {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #d9dfe3;
+    background: #f0f2f5;
+}
+
+.o_wa_chat_stage_identity {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+}
+
+.o_wa_chat_stage_title {
+    color: #111b21;
+    font-weight: 700;
+}
+
+.o_wa_chat_stage_meta {
+    color: #667781;
+    font-size: 0.875rem;
+}
+
+.o_wa_chat_stage_body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 1.25rem;
+    background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 28rem),
+        linear-gradient(180deg, #efeae2 0%, #ebe5dc 100%);
+}
+
+.o_wa_chat_message_row {
+    display: flex;
+    margin-bottom: 0.75rem;
+}
+
+.o_wa_chat_message_row.is-outbound {
+    justify-content: flex-end;
+}
+
+.o_wa_chat_message {
+    width: 78%;
+    max-width: 36rem;
+    padding: 0.625rem 0.75rem 0.5rem;
+    border-radius: 0.6rem;
+    box-shadow: 0 1px 0 rgba(17, 27, 33, 0.08);
+}
+
+.o_wa_chat_message.is-inbound {
+    background: #ffffff;
+    color: #111b21;
+    border-top-left-radius: 0.2rem;
+}
+
+.o_wa_chat_message.is-outbound {
+    background: #d9fdd3;
+    color: #111b21;
+    border-top-right-radius: 0.2rem;
+}
+
+.o_wa_chat_message_sender {
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #0b5c4b;
+}
+
+.o_wa_chat_message_text {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.o_wa_chat_message_time {
+    margin-top: 0.35rem;
+    text-align: right;
+    font-size: 0.75rem;
+    color: #667781;
+}
+
+.o_wa_chat_stage_placeholder,
+.o_wa_chat_loading,
+.o_wa_chat_empty {
+    color: #667781;
+}
+
+.o_wa_chat_stage_placeholder,
+.o_wa_chat_loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 auto;
+    padding: 2rem;
+}
+
+@media (max-width: 1200px) {
+    .o_wa_chat_shell {
+        grid-template-columns: 20rem minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .o_wa_chat_root {
+        height: auto;
+        min-height: calc(100vh - 2rem);
+    }
+
+    .o_wa_chat_shell {
+        grid-template-columns: 1fr;
+    }
+
+    .o_wa_chat_sidebar {
+        max-height: 18rem;
+        border-right: 0;
+        border-bottom: 1px solid #d9dfe3;
+    }
+}

@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_wa_chat_workspace" model="ir.actions.client">
+        <field name="name">WhatsApp Chats</field>
+        <field name="tag">wa_whatsapp_bridge.chat_workspace</field>
+    </record>
+
+    <record id="action_wa_embedded_portal" model="ir.actions.client">
+        <field name="name">WhatsApp Portal</field>
+        <field name="tag">wa_whatsapp_bridge.portal</field>
+    </record>
+
+    <record id="view_wa_service_instance_list" model="ir.ui.view">
+        <field name="name">wa.service.instance.list</field>
+        <field name="model">wa.service.instance</field>
+        <field name="arch" type="xml">
+            <list string="WhatsApp Services">
+                <field name="name"/>
+                <field name="state"/>
+                <field name="port"/>
+                <field name="pid"/>
+                <field name="started_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_wa_service_instance_form" model="ir.ui.view">
+        <field name="name">wa.service.instance.form</field>
+        <field name="model">wa.service.instance</field>
+        <field name="arch" type="xml">
+            <form string="WhatsApp Auto Reply Service">
+                <header>
+                    <button name="action_open_embedded_portal" type="object" string="Open In Odoo" class="btn-primary"/>
+                    <button name="action_install_dependencies" type="object" string="Install Node Deps" class="btn-secondary"/>
+                    <button name="action_start_service" type="object" string="Start" class="btn-primary" invisible="state == 'running'"/>
+                    <button name="action_stop_service" type="object" string="Stop" class="btn-secondary" invisible="state != 'running'"/>
+                    <button name="action_refresh_status" type="object" string="Refresh" class="btn-secondary"/>
+                    <button name="action_open_portal" type="object" string="Open External Portal" class="btn-secondary"/>
+                    <field name="state" widget="statusbar" statusbar_visible="stopped,running,error"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="active"/>
+                            <field name="port"/>
+                            <field name="api_base_url"/>
+                            <field name="pid" readonly="1"/>
+                            <field name="started_at" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="node_binary"/>
+                            <field name="npm_binary"/>
+                            <field name="runtime_path" readonly="1"/>
+                            <field name="log_file" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_wa_service_instance" model="ir.actions.act_window">
+        <field name="name">WhatsApp Services</field>
+        <field name="res_model">wa.service.instance</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

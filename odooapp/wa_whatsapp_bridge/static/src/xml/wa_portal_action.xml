@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="wa_whatsapp_bridge.WaPortalAction">
+        <div class="o_wa_portal_root">
+            <div class="o_wa_portal_view container-fluid py-3">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
+                    <div>
+                        <h1 class="h3 mb-1">WhatsApp Portal</h1>
+                        <p class="text-muted mb-0">在 Odoo 后台完成扫码登录、状态查看和账号切换。消息监听与 webhook 转发继续由运行时负责。</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span t-attf-class="badge rounded-pill #{statusClass}">
+                            <t t-out="stateLabel"/>
+                        </span>
+                        <button type="button" class="btn btn-outline-primary" t-on-click="refreshStatus" t-att-disabled="state.loading">
+                            刷新状态
+                        </button>
+                    </div>
+                </div>
+
+                <div class="alert alert-danger" role="alert" t-if="state.error">
+                    <t t-out="state.error"/>
+                </div>
+
+                <div class="row g-3" t-if="!state.loading">
+                    <div class="col-12 col-xl-6">
+                        <section class="card o_wa_portal_card h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                                    <div>
+                                        <h2 class="h5 mb-1">连接状态</h2>
+                                        <p class="text-muted mb-0">这里显示当前 WhatsApp 会话和运行时连接状态。</p>
+                                    </div>
+                                    <span t-attf-class="badge rounded-pill #{statusClass}">
+                                        <t t-out="stateLabel"/>
+                                    </span>
+                                </div>
+                                <dl class="row o_wa_key_value mb-0">
+                                    <dt class="col-sm-4 text-muted">账号标识</dt>
+                                    <dd class="col-sm-8 fw-semibold">
+                                        <t t-out="accountWid"/>
+                                    </dd>
+                                    <dt class="col-sm-4 text-muted">服务状态</dt>
+                                    <dd class="col-sm-8">
+                                        <t t-out="state.waState"/>
+                                    </dd>
+                                    <dt class="col-sm-4 text-muted">状态说明</dt>
+                                    <dd class="col-sm-8">
+                                        <t t-out="state.detail"/>
+                                    </dd>
+                                    <dt class="col-sm-4 text-muted">实例名称</dt>
+                                    <dd class="col-sm-8">
+                                        <t t-out="state.instanceName"/>
+                                    </dd>
+                                </dl>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div class="col-12 col-xl-6">
+                        <section class="card o_wa_portal_card h-100 o_wa_portal_success" t-if="state.readySuccessVisible">
+                            <div class="card-body d-flex flex-column align-items-center justify-content-center text-center py-5">
+                                <div class="display-1 lh-1 text-success mb-3">✓</div>
+                                <h2 class="h5 mb-2 text-success">登录成功</h2>
+                                <p class="text-muted mb-2">登录成功，正在进入聊天页面。</p>
+                                <div class="small text-muted">账号：<t t-out="accountWid"/></div>
+                            </div>
+                        </section>
+
+                        <section class="card o_wa_portal_card h-100" t-if="!state.readySuccessVisible">
+                            <div class="card-body" t-if="!isReady">
+                                <h2 class="h5 mb-1">扫码登录</h2>
+                                <p class="text-muted mb-3">当状态为待登录时，在这里显示二维码。扫码成功后页面会自动切换到已登录视图。</p>
+                                <div class="alert alert-warning mb-3" role="alert" t-if="state.portalState !== 'qr_required'">
+                                    二维码加载中。
+                                </div>
+                                <div class="o_wa_qr_panel" t-if="state.portalState === 'qr_required'">
+                                    <img t-if="state.qrDataUrl" t-att-src="state.qrDataUrl" alt="WhatsApp QR" class="o_wa_qr_image"/>
+                                    <div class="text-muted" t-if="!state.qrDataUrl and !state.qrError">二维码加载中。</div>
+                                    <div class="alert alert-danger mb-0 mt-3" role="alert" t-if="state.qrError">
+                                        <t t-out="state.qrError"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body" t-if="isReady">
+                                <h2 class="h5 mb-1">已登录账号</h2>
+                                <p class="text-muted mb-3">账号已上线，后台运行时会继续负责消息监听、状态维护和 webhook 转发。</p>
+                                <dl class="row o_wa_key_value mb-0">
+                                    <dt class="col-sm-4 text-muted">账号</dt>
+                                    <dd class="col-sm-8 fw-semibold">
+                                        <t t-out="accountWid"/>
+                                    </dd>
+                                    <dt class="col-sm-4 text-muted">平台</dt>
+                                    <dd class="col-sm-8">
+                                        <t t-out="accountPlatform"/>
+                                    </dd>
+                                    <dt class="col-sm-4 text-muted">当前状态</dt>
+                                    <dd class="col-sm-8">
+                                        <t t-out="state.detail"/>
+                                    </dd>
+                                </dl>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div class="col-12 col-xl-6">
+                        <section class="card o_wa_portal_card h-100">
+                            <div class="card-body">
+                                <h2 class="h5 mb-1">运行时信息</h2>
+                                <p class="text-muted mb-3">Odoo 页面负责管理界面，真正的 WhatsApp 会话仍运行在 Node 服务中。</p>
+                                <dl class="row o_wa_key_value mb-0">
+                                    <dt class="col-sm-4 text-muted">Portal State</dt>
+                                    <dd class="col-sm-8">
+                                        <t t-out="state.portalState"/>
+                                    </dd>
+                                    <dt class="col-sm-4 text-muted">登录动作</dt>
+                                    <dd class="col-sm-8">
+                                        <t t-out="loginActionMessage"/>
+                                    </dd>
+                                    <dt class="col-sm-4 text-muted">切换状态</dt>
+                                    <dd class="col-sm-8">
+                                        <t t-out="switchStateLabel"/>
+                                    </dd>
+                                </dl>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div class="col-12 col-xl-6">
+                        <section class="card o_wa_portal_card h-100">
+                            <div class="card-body">
+                                <h2 class="h5 mb-1">操作</h2>
+                                <p class="text-muted mb-3">更换账号会清理当前登录缓存并重新进入扫码流程。</p>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button" class="btn btn-primary" t-on-click="login" t-att-disabled="loginDisabled">
+                                        登录
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" t-on-click="switchAccount" t-att-disabled="state.accountSwitchInProgress">
+                                        更换账号
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <section class="card o_wa_portal_card" t-if="state.loading">
+                    <div class="card-body py-5 text-center">
+                        <div class="text-muted">WhatsApp 页面加载中...</div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </t>
+</templates>

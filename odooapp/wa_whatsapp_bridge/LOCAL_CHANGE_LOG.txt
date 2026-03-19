@@ -1,0 +1,127 @@
+=== KEY STEP ENTRY START ===
+timestamp: 2026-03-10 15:55:41
+project_root: D:\code\programs\odooapps\wa_whatsapp_bridge
+branch: main
+implemented_change:
+- package the wa_whatsapp_bridge addon as a standalone managed repository under D:\code\programs\odooapps
+- include the runtime self-heal fix for missing dotenv during Start and the removal of the Webhook/AI and Runtime Logs tabs
+- exclude generated runtime folders such as node_modules, .wwebjs_auth, __pycache__, and test temp folders from version control
+files_changed:
+- D:\code\programs\odooapps\wa_whatsapp_bridge\.gitignore
+- D:\code\programs\odooapps\wa_whatsapp_bridge\__init__.py
+- D:\code\programs\odooapps\wa_whatsapp_bridge\__manifest__.py
+- D:\code\programs\odooapps\wa_whatsapp_bridge\data\wa_service_data.xml
+- D:\code\programs\odooapps\wa_whatsapp_bridge\models\__init__.py
+- D:\code\programs\odooapps\wa_whatsapp_bridge\models\wa_service.py
+- D:\code\programs\odooapps\wa_whatsapp_bridge\node_runtime\whatsapp\...
+- D:\code\programs\odooapps\wa_whatsapp_bridge\security\ir.model.access.csv
+- D:\code\programs\odooapps\wa_whatsapp_bridge\tests\test_wa_service_runtime_unit.py
+- D:\code\programs\odooapps\wa_whatsapp_bridge\tests\test_wa_service_view_unit.py
+- D:\code\programs\odooapps\wa_whatsapp_bridge\views\menus.xml
+- D:\code\programs\odooapps\wa_whatsapp_bridge\views\wa_service_views.xml
+local_verification:
+- C:\Users\peiying.wang\.conda\envs\odoo\python.exe D:\code\test\odoo19\odoo\addons\wa_whatsapp_bridge\tests\test_wa_service_runtime_unit.py (passed before sync)
+- C:\Users\peiying.wang\.conda\envs\odoo\python.exe D:\code\test\odoo19\odoo\addons\wa_whatsapp_bridge\tests\test_wa_service_view_unit.py (passed before sync)
+- local repo status in D:\code\programs\odooapps\wa_whatsapp_bridge was clean before log write
+push: pending
+push_note: user requested GitHub push
+=== KEY STEP ENTRY END ===
+=== KEY STEP ENTRY START ===
+timestamp: 2026-03-19 13:47:18
+project_root: D:\code\programs\odooapps\wa_whatsapp_bridge
+branch: main
+implemented_change:
+- Added a ready success state to the WhatsApp Portal client action so the QR panel is replaced with a green check confirmation when the listener reaches ready.
+- Added an automatic redirect from the portal success state to WhatsApp Chats after about 1.5 seconds.
+files_changed:
+- D:\code\programs\odooapps\wa_whatsapp_bridge\static\src\js\wa_portal_action.js
+- D:\code\programs\odooapps\wa_whatsapp_bridge\static\src\xml\wa_portal_action.xml
+- D:\code\programs\odooapps\wa_whatsapp_bridge\tests\test_wa_portal_action_unit.py
+local_verification:
+- conda run -n wa_whatsapp_bridge python -m unittest tests.test_wa_portal_action_unit tests.test_wa_service_view_unit -> OK (11 tests)
+- node --check static/src/js/wa_portal_action.js -> OK
+push: pending
+push_note: waiting for user confirmation
+=== KEY STEP ENTRY END ===
+=== KEY STEP ENTRY START ===
+timestamp: 2026-03-19 15:24:00
+project_root: D:\code\programs\odooapps\wa_whatsapp_bridge
+branch: main
+implemented_change:
+- swap the WhatsApp Portal and WhatsApp Chats menu order with a minimal sequence-only change so Portal appears first under WhatsApp Bridge
+- add a regression test that asserts the Portal menu sequence stays ahead of the Chats menu sequence
+- upgrade wa_whatsapp_bridge in the old odoo19 environment, clear web assets, and restart the 8069 service so the new menu order is visible immediately
+files_changed:
+- D:\code\programs\odooapps\wa_whatsapp_bridge\views\menus.xml
+- D:\code\programs\odooapps\wa_whatsapp_bridge\tests\test_wa_service_view_unit.py
+- D:\code\programs\odooapps\wa_whatsapp_bridge\LOCAL_CHANGE_LOG.txt
+local_verification:
+- conda run -n wa_whatsapp_bridge python D:\code\programs\odooapps\wa_whatsapp_bridge\tests\test_wa_service_view_unit.py -> OK (10 tests)
+- conda run -n odoo19 python D:\code\test\odoo19\odoo\odoo-bin -c D:\code\test\odoo19\odoo\odoo_social_auto_publish.conf -u wa_whatsapp_bridge --stop-after-init -> completed
+- asset attachments /web/assets/% cleared in odoo shell
+- http://127.0.0.1:8069/web/login -> 200 after restart
+push: pending
+push_note: waiting for user confirmation
+=== KEY STEP ENTRY END ===
+=== KEY STEP ENTRY START ===
+timestamp: 2026-03-17 20:45:01
+project_root: D:\code\programs\odooapps\wa_whatsapp_bridge
+branch: main
+implemented_change:
+- Removed the `Service Console` menu entry from the WhatsApp Bridge navigation.
+- Kept the underlying action and views unchanged so only the frontend entry point disappears.
+files_changed:
+- D:\code\programs\odooapps\wa_whatsapp_bridge\views\menus.xml
+local_verification:
+- Get-Content views\menus.xml -> menu now shows only `WhatsApp Chats` and `WhatsApp Portal`
+- Select-String -Path views\menus.xml -Pattern 'Service Console','menu_wa_whatsapp_services' -> no matches
+- conda run -n wa_whatsapp_bridge git diff -- views/menus.xml -> skipped due local conda temp-file activation failure unrelated to the XML change
+push: pending
+push_note: waiting for user confirmation
+=== KEY STEP ENTRY END ===
+=== KEY STEP ENTRY START ===
+timestamp: 2026-03-10 16:02:24
+project_root: D:\code\programs\odooapps\wa_whatsapp_bridge
+branch: main
+implemented_change:
+- record successful GitHub repository creation and initial push for the standalone wa_whatsapp_bridge module
+files_changed:
+- D:\code\programs\odooapps\wa_whatsapp_bridge\LOCAL_CHANGE_LOG.txt
+local_verification:
+- git fetch origin (passed)
+- git rev-parse HEAD == git rev-parse origin/main == b677279d73ca6ed601324073212f4b18359c851a
+- git status -sb returned clean branch state before this log update
+push: yes
+push_note: initial remote repository creation and module push completed at commit b677279d73ca6ed601324073212f4b18359c851a
+=== KEY STEP ENTRY END ===
+=== KEY STEP ENTRY START ===
+timestamp: 2026-03-16 20:33:45
+project_root: D:\code\programs\odooapps\wa_whatsapp_bridge
+branch: main
+implemented_change:
+- Added an Odoo-embedded WhatsApp portal with same-origin proxy routes, record-bound instance resolution, and OWL/QWeb/SCSS backend assets.
+- Added Node runtime QR caching plus /api/account/qr so users can scan login codes directly inside Odoo while keeping webhook listeners in the existing runtime.
+files_changed:
+- D:\code\programs\odooapps\wa_whatsapp_bridge\__init__.py
+- D:\code\programs\odooapps\wa_whatsapp_bridge\__manifest__.py
+- D:\code\programs\odooapps\wa_whatsapp_bridge\controllers\__init__.py
+- D:\code\programs\odooapps\wa_whatsapp_bridge\controllers\main.py
+- D:\code\programs\odooapps\wa_whatsapp_bridge\models\wa_service.py
+- D:\code\programs\odooapps\wa_whatsapp_bridge\views\wa_service_views.xml
+- D:\code\programs\odooapps\wa_whatsapp_bridge\views\menus.xml
+- D:\code\programs\odooapps\wa_whatsapp_bridge\static\src\js\wa_portal_action.js
+- D:\code\programs\odooapps\wa_whatsapp_bridge\static\src\xml\wa_portal_action.xml
+- D:\code\programs\odooapps\wa_whatsapp_bridge\static\src\scss\wa_portal_action.scss
+- D:\code\programs\odooapps\wa_whatsapp_bridge\tests\test_wa_service_runtime_unit.py
+- D:\code\programs\odooapps\wa_whatsapp_bridge\tests\test_wa_service_view_unit.py
+- D:\code\programs\odooapps\wa_whatsapp_bridge\node_runtime\whatsapp\example.js
+- D:\code\programs\odooapps\wa_whatsapp_bridge\node_runtime\whatsapp\src\portalQr.js
+- D:\code\programs\odooapps\wa_whatsapp_bridge\node_runtime\whatsapp\tests\portal-qr.test.js
+local_verification:
+- python D:\code\programs\odooapps\wa_whatsapp_bridge\tests\test_wa_service_runtime_unit.py -> OK (6 tests)
+- python D:\code\programs\odooapps\wa_whatsapp_bridge\tests\test_wa_service_view_unit.py -> OK (5 tests)
+- node D:\code\programs\Whatsapp_auto_rely\Whatsapp\node_modules\mocha\bin\_mocha D:\code\programs\odooapps\wa_whatsapp_bridge\node_runtime\whatsapp\tests\portal-qr.test.js -> OK (2 tests)
+- node -c D:\code\programs\odooapps\wa_whatsapp_bridge\node_runtime\whatsapp\example.js -> OK
+push: pending
+push_note: waiting for user confirmation
+=== KEY STEP ENTRY END ===

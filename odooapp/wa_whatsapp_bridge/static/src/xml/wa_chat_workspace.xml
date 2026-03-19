@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="wa_whatsapp_bridge.WaChatWorkspace">
+        <div class="o_wa_chat_root">
+            <div class="o_wa_chat_shell">
+                <div class="o_wa_chat_sidebar">
+                    <div class="o_wa_chat_sidebar_header">
+                        <div>
+                            <h1 class="o_wa_chat_title">WhatsApp Chats</h1>
+                            <p class="o_wa_chat_caption">消息来自监听项目写入的 PostgreSQL 表。</p>
+                        </div>
+                    </div>
+                    <div class="alert alert-danger m-3 mb-0" role="alert" t-if="state.error">
+                        <t t-out="state.error"/>
+                    </div>
+                    <div class="alert alert-warning m-3 mb-0" role="alert" t-if="!state.error and !isReady and !state.loading">
+                        <div>当前 WhatsApp 未登录，聊天记录已隐藏。</div>
+                        <div class="small mt-1" t-if="state.portalDetail" t-out="state.portalDetail"/>
+                    </div>
+                    <div class="o_wa_chat_list" t-if="hasChats">
+                        <button
+                            t-foreach="state.chats"
+                            t-as="chat"
+                            t-key="chat.chat_jid"
+                            type="button"
+                            class="o_wa_chat_list_item"
+                            t-att-class="chat.chat_jid === state.selectedChatJid ? 'o_wa_chat_list_item is-active' : 'o_wa_chat_list_item'"
+                            t-on-click="() => this.openChat(chat)"
+                        >
+                            <div class="o_wa_chat_avatar">
+                                <t t-out="(chat.chat_name || '?').slice(0, 1).toUpperCase()"/>
+                            </div>
+                            <div class="o_wa_chat_summary">
+                                <div class="o_wa_chat_summary_top">
+                                    <span class="o_wa_chat_name" t-out="chat.chat_name"/>
+                                    <span class="o_wa_chat_time" t-out="formatMessageTime(chat.last_message_time)"/>
+                                </div>
+                                <div class="o_wa_chat_summary_bottom">
+                                    <span class="o_wa_chat_preview" t-out="chat.last_message_text || '暂无文本消息'"/>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="o_wa_chat_empty p-4" t-if="!hasChats and !state.loading and isReady">
+                        暂无聊天数据。
+                    </div>
+                </div>
+
+                <div class="o_wa_chat_stage">
+                    <div class="o_wa_chat_stage_header" t-if="state.selectedChat">
+                        <div class="o_wa_chat_stage_identity">
+                            <div class="o_wa_chat_avatar is-large">
+                                <t t-out="(chatTitle || '?').slice(0, 1).toUpperCase()"/>
+                            </div>
+                            <div>
+                                <div class="o_wa_chat_stage_title" t-out="chatTitle"/>
+                                <div class="o_wa_chat_stage_meta" t-out="chatMeta"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="o_wa_chat_stage_body" t-if="state.selectedChat and isReady">
+                        <div
+                            t-foreach="state.messages"
+                            t-as="message"
+                            t-key="message.id"
+                            class="o_wa_chat_message_row"
+                            t-att-class="message.from_me ? 'o_wa_chat_message_row is-outbound' : 'o_wa_chat_message_row is-inbound'"
+                        >
+                            <article
+                                class="o_wa_chat_message"
+                                t-att-class="message.from_me ? 'o_wa_chat_message is-outbound' : 'o_wa_chat_message is-inbound'"
+                            >
+                                <div class="o_wa_chat_message_sender" t-if="message.chat_type === 'group' and !message.from_me">
+                                    <t t-out="message.sender_name || message.sender_phone || message.sender_jid"/>
+                                </div>
+                                <div class="o_wa_chat_message_text" t-out="message.message_text || '[非文本消息]'"/>
+                                <div class="o_wa_chat_message_time" t-out="formatMessageTime(message.message_time)"/>
+                            </article>
+                        </div>
+                    </div>
+
+                    <div class="o_wa_chat_stage_placeholder" t-if="!state.selectedChat and !state.loading and isReady">
+                        选择左侧会话以查看消息。
+                    </div>
+
+                    <div class="o_wa_chat_stage_placeholder" t-if="!state.loading and !isReady">
+                        当前 WhatsApp 未登录，请先到 WhatsApp Portal 完成扫码登录。
+                    </div>
+
+                    <div class="o_wa_chat_loading" t-if="state.loading">
+                        聊天界面加载中...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

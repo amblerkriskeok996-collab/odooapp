@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+
+node_runtime/whatsapp/node_modules/
+node_runtime/whatsapp/.wwebjs_auth/
+node_runtime/whatsapp/.wwebjs_cache/
+
+tests/.tmp_runtime_unit/
+.wa_runtime/
+*.log

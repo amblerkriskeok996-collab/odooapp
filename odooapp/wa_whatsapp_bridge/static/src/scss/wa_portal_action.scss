@@ -1,0 +1,49 @@
+.o_wa_portal_root {
+    height: calc(100vh - 2rem);
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.o_wa_portal_view {
+    min-height: 100%;
+
+    .o_wa_portal_card {
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid var(--border-color, #dfe3e8);
+        box-shadow: 0 4px 16px rgba(31, 42, 55, 0.06);
+    }
+
+    .o_wa_key_value {
+        dt,
+        dd {
+            margin-bottom: 0.75rem;
+        }
+    }
+
+    .o_wa_qr_panel {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 0;
+        max-height: 20rem;
+        border: 1px dashed #ced4da;
+        border-radius: 0.75rem;
+        background: #fafbfc;
+        padding: 1rem;
+    }
+
+    .o_wa_qr_image {
+        display: block;
+        width: 100%;
+        max-width: 14rem;
+        max-height: 14rem;
+        height: auto;
+        object-fit: contain;
+        padding: 0.5rem;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 0.75rem;
+    }
+}

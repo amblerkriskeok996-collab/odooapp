@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WhatsApp 账号首页</title>
+    <style>
+        :root {
+            --bg: #eef3ef;
+            --panel: #ffffff;
+            --ink: #1a2529;
+            --muted: #556267;
+            --line: #d1d9d1;
+            --ok: #1b7f5d;
+            --warn: #ad5b2d;
+            --bad: #a73e3e;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                linear-gradient(160deg, rgba(99, 162, 128, 0.12), rgba(232, 215, 198, 0.16)),
+                var(--bg);
+            color: var(--ink);
+            font-family: "Segoe UI Variable", "Trebuchet MS", "Noto Sans SC", sans-serif;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        .card {
+            width: min(760px, 96vw);
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            box-shadow: 0 18px 42px rgba(15, 20, 16, 0.12);
+            padding: 28px;
+            animation: fade-up 320ms ease-out both;
+        }
+
+        @keyframes fade-up {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 30px;
+            letter-spacing: 0.02em;
+        }
+
+        .desc {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .status {
+            margin-top: 18px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 14px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: center;
+            font-size: 15px;
+        }
+
+        .pill {
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border: 1px solid transparent;
+        }
+
+        .ok {
+            color: #136345;
+            border-color: #acd5c1;
+            background: #ddf2e8;
+        }
+
+        .warn {
+            color: #80401d;
+            border-color: #e8c8b5;
+            background: #f8e6dc;
+        }
+
+        .bad {
+            color: #7e2f2f;
+            border-color: #e6c0c0;
+            background: #f9eaea;
+        }
+
+        .alert {
+            margin-top: 16px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #efcbcb;
+            background: #fff0f0;
+            color: var(--bad);
+            display: none;
+        }
+
+        .actions {
+            margin-top: 20px;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        }
+
+        button {
+            border: 0;
+            border-radius: 12px;
+            padding: 13px 14px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 120ms ease, box-shadow 120ms ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
+        }
+
+        .btn-open {
+            background: linear-gradient(135deg, #21895f, #1a6f53);
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #4a5d7f, #384b6d);
+        }
+    </style>
+</head>
+<body>
+    <main class="card">
+        <h1>已登录账号首页</h1>
+        <p class="desc">
+            当前页用于展示 `whatsapp-web` 会话的账号状态。点击“打开已登录首页”会唤起该会话的 WhatsApp Web 首页。
+        </p>
+
+        <section class="status">
+            <div class="row">
+                <span>状态</span>
+                <span id="statePill" class="pill warn">LOADING</span>
+            </div>
+            <div class="row">
+                <span>账号</span>
+                <strong id="wid">-</strong>
+            </div>
+            <div class="row">
+                <span>平台</span>
+                <strong id="platform">-</strong>
+            </div>
+            <div class="row">
+                <span>说明</span>
+                <strong id="detail">-</strong>
+            </div>
+        </section>
+
+        <div id="alert" class="alert"></div>
+
+        <div class="actions">
+            <button id="openButton" class="btn-open" type="button">打开已登录首页</button>
+            <button id="backButton" class="btn-back" type="button">返回账号管理</button>
+        </div>
+    </main>
+
+    <script>
+        const statePill = document.getElementById('statePill');
+        const wid = document.getElementById('wid');
+        const platform = document.getElementById('platform');
+        const detail = document.getElementById('detail');
+        const alertBox = document.getElementById('alert');
+        const openButton = document.getElementById('openButton');
+        const backButton = document.getElementById('backButton');
+
+        function paintState(state) {
+            const ready = state === 'ready';
+            const waiting = state === 'switching_account' || state === 'reinitializing' || state === 'initializing' || state === 'authenticated';
+            statePill.className = `pill ${ready ? 'ok' : (waiting ? 'warn' : 'bad')}`;
+            statePill.textContent = (state || 'unknown').toUpperCase();
+        }
+
+        function showAlert(message) {
+            alertBox.textContent = message;
+            alertBox.style.display = 'block';
+        }
+
+        function clearAlert() {
+            alertBox.textContent = '';
+            alertBox.style.display = 'none';
+        }
+
+        async function refreshStatus() {
+            try {
+                const response = await fetch('/api/account/status');
+                const payload = await response.json();
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.error || '加载状态失败');
+                }
+
+                const data = payload.data || {};
+                paintState(data.portalState);
+                wid.textContent = data?.account?.wid || '-';
+                platform.textContent = data?.account?.platform || '-';
+                detail.textContent = data?.detail || '-';
+
+                const loginAllowed = Boolean(data?.loginAction?.allowed);
+                openButton.disabled = !loginAllowed;
+                if (!loginAllowed) {
+                    showAlert('账号已失效，请返回账号管理页重新登录。');
+                } else {
+                    clearAlert();
+                }
+            } catch (error) {
+                showAlert(error.message || '加载状态失败');
+            }
+        }
+
+        async function openLoggedInHome() {
+            try {
+                const response = await fetch('/api/account/login', { method: 'POST' });
+                const payload = await response.json();
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.error || '账号已失效，请重新登录');
+                }
+                clearAlert();
+            } catch (error) {
+                showAlert(error.message || '账号已失效，请重新登录');
+            } finally {
+                await refreshStatus();
+            }
+        }
+
+        openButton.addEventListener('click', openLoggedInHome);
+        backButton.addEventListener('click', () => {
+            window.location.href = '/';
+        });
+
+        refreshStatus();
+        setInterval(refreshStatus, 4000);
+    </script>
+</body>
+</html>
